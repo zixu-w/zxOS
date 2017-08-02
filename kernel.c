@@ -16,6 +16,9 @@
 #error "This tutorial needs to be compiled with a ix86-elf compiler"
 #endif
 
+#define _VGA_WIDTH  80
+#define _VGA_HEIGHT 25
+
 /* Hardware text mode color constants. */
 enum vga_color {
 	VGA_COLOR_BLACK = 0,
@@ -51,13 +54,26 @@ size_t strlen(const char* str) {
 	return len;
 }
 
-static const size_t VGA_WIDTH = 80;
-static const size_t VGA_HEIGHT = 25;
+static const size_t VGA_WIDTH = _VGA_WIDTH;
+static const size_t VGA_HEIGHT = _VGA_HEIGHT;
 
 size_t terminal_row;
 size_t terminal_column;
 uint8_t terminal_color;
 uint16_t* terminal_buffer;
+uint16_t  render_buffer[_VGA_WIDTH * _VGA_HEIGHT];
+
+void terminal_update(size_t start_x, size_t start_y,
+                     size_t end_x,   size_t end_y) {
+  for (size_t y = start_y; y < VGA_HEIGHT; y++) {
+    for (size_t x = start_x; x < VGA_WIDTH; x++) {
+      if (y > end_y || (x == end_x && y == end_y))
+        return;
+      const size_t index = y * VGA_WIDTH + x;
+      terminal_buffer[index] = render_buffer[index];
+    }
+  }
+}
 
 void terminal_initialize(void) {
 	terminal_row = 0;
@@ -67,9 +83,10 @@ void terminal_initialize(void) {
 	for (size_t y = 0; y < VGA_HEIGHT; y++) {
 		for (size_t x = 0; x < VGA_WIDTH; x++) {
 			const size_t index = y * VGA_WIDTH + x;
-			terminal_buffer[index] = vga_entry(' ', terminal_color);
+			render_buffer[index] = vga_entry(' ', terminal_color);
 		}
 	}
+  terminal_update(0, 0, VGA_WIDTH, VGA_HEIGHT);
 }
 
 void terminal_setcolor(uint8_t color) {
@@ -78,7 +95,8 @@ void terminal_setcolor(uint8_t color) {
 
 void terminal_putentryat(char c, uint8_t color, size_t x, size_t y) {
 	const size_t index = y * VGA_WIDTH + x;
-	terminal_buffer[index] = vga_entry(c, color);
+	render_buffer[index] = vga_entry(c, color);
+  terminal_update(x, y, x + 1, y);
 }
 
 void terminal_putchar(char c) {
@@ -116,4 +134,12 @@ void kernel_main(void) {
 	/* Newline support is left as an exercise. */
 	terminal_writestring("Hello, kernel World!\n");
 	terminal_writestring("Hello, newline works!\n");
+	terminal_writestring(
+    "This is a test trying to write across multiple lines to test if lines "
+    "are correctly wrapped.\n"
+  );
+  terminal_writestring(
+    "This is a test trying to write across multiple lines to test if lines "
+    "are correctly wrapped.\n"
+  );
 }
