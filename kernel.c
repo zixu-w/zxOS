@@ -1,8 +1,4 @@
-/* Surely you will remove the processor conditionals and this comment
-   appropriately depending on whether or not you use C++. */
-#if !defined(__cplusplus)
-#include <stdbool.h> /* C doesn't have booleans by default. */
-#endif
+#include <stdbool.h>
 #include <stddef.h>
 #include <stdint.h>
 
@@ -171,11 +167,10 @@ void kernel_main(void) {
     "are correctly wrapped.\n"
   );
   terminal_writestring(
-    "This is a test trying to write across multiple lines to test if lines "
-    "are correctly wrapped.\n"
-  );
-  terminal_writestring(
     "This\nis\na\ntest\ntrying\nto\nwrite\nacross\nthe\nwhole\nscreen\nto\n"
-    "test\nif\nup\nscrolling\nis\nworking\nor\nnot.\n"
+    "test\nif\nup\nscrolling\nis\nworking.\n"
   );
+  terminal_writestring("It works!\n");
+  terminal_writestring("\n\n");
+  terminal_writestring("Hello, kernel World!");
 }
