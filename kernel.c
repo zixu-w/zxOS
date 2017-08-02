@@ -62,6 +62,8 @@ size_t terminal_column;
 uint8_t terminal_color;
 uint16_t* terminal_buffer;
 uint16_t  render_buffer[_VGA_WIDTH * _VGA_HEIGHT];
+uint16_t  offscreen_up_buffer[_VGA_WIDTH * _VGA_HEIGHT];
+uint16_t  offscreen_down_buffer[_VGA_WIDTH * _VGA_HEIGHT];
 
 void terminal_update(size_t start_x, size_t start_y,
                      size_t end_x,   size_t end_y) {
@@ -84,8 +86,35 @@ void terminal_initialize(void) {
 		for (size_t x = 0; x < VGA_WIDTH; x++) {
 			const size_t index = y * VGA_WIDTH + x;
 			render_buffer[index] = vga_entry(' ', terminal_color);
+			offscreen_up_buffer[index] = vga_entry(' ', terminal_color);
+			offscreen_down_buffer[index] = vga_entry(' ', terminal_color);
 		}
 	}
+  terminal_update(0, 0, VGA_WIDTH, VGA_HEIGHT);
+}
+
+void terminal_scroll_up(size_t offset_row) {
+  for (size_t y = offset_row; y < VGA_HEIGHT + offset_row; y++) {
+    for (size_t x = 0; x < VGA_WIDTH; x++) {
+      const size_t index = y * VGA_WIDTH + x;
+      const size_t render_y = y - offset_row;
+      const size_t render_index = render_y * VGA_WIDTH + x;
+      if (y <= terminal_row) {
+        const size_t up_y = VGA_HEIGHT - y;
+        const size_t up_index = up_y * VGA_WIDTH + x;
+        // TODO: scroll up offscreen_up_buffer.
+        offscreen_up_buffer[up_index] = render_buffer[render_index];
+      }
+      if (y < VGA_HEIGHT)
+        render_buffer[render_index] = terminal_buffer[index];
+      else {
+        const size_t down_y = y - VGA_HEIGHT;
+        const size_t down_index = down_y * VGA_WIDTH + x;
+        // TODO: scroll up offscreen_down_buffer.
+        render_buffer[render_index] = offscreen_down_buffer[down_index];
+      }
+    }
+  }
   terminal_update(0, 0, VGA_WIDTH, VGA_HEIGHT);
 }
 
@@ -103,14 +132,17 @@ void terminal_putchar(char c) {
   if (c == '\n') {
     terminal_column = 0;
     if (++terminal_row == VGA_HEIGHT) {
-      terminal_row = 0;
+      --terminal_row;
+      terminal_scroll_up(1);
     }
   } else {
   	terminal_putentryat(c, terminal_color, terminal_column, terminal_row);
   	if (++terminal_column == VGA_WIDTH) {
   		terminal_column = 0;
-  		if (++terminal_row == VGA_HEIGHT)
-  			terminal_row = 0;
+  		if (++terminal_row == VGA_HEIGHT) {
+        --terminal_row;
+        terminal_scroll_up(1);
+      }
   	}
   }
 }
@@ -141,5 +173,9 @@ void kernel_main(void) {
   terminal_writestring(
     "This is a test trying to write across multiple lines to test if lines "
     "are correctly wrapped.\n"
+  );
+  terminal_writestring(
+    "This\nis\na\ntest\ntrying\nto\nwrite\nacross\nthe\nwhole\nscreen\nto\n"
+    "test\nif\nup\nscrolling\nis\nworking\nor\nnot.\n"
   );
 }
