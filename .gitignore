@@ -7,8 +7,6 @@
 *.obj
 *.elf
 *.bin
-obj
-bin
 
 # Linker output
 *.ilk
@@ -53,3 +51,8 @@ modules.order
 Module.symvers
 Mkfile.old
 dkms.conf
+
+# Ignored directories
+obj
+bin
+image
