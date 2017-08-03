@@ -1,4 +1,4 @@
-.PHONY : all clean check image
+.PHONY : all clean check image qemu-run
 
 BINDIR := bin
 OBJDIR := obj
@@ -23,6 +23,7 @@ CROSS_AS := $(CROSS_PATH)/bin/i686-elf-as
 CROSS_CC := $(CROSS_PATH)/bin/i686-elf-gcc
 CROSS_LINKER := $(CROSS_PATH)/bin/i686-elf-gcc
 CROSS_GRUB := $(CROSS_PATH)/bin/grub
+QEMU := qemu
 
 CFLAGS := -std=gnu99 -ffreestanding -O2 -Wall -Wextra
 LINKFLAGS := -ffreestanding -O2 -nostdlib -lgcc
@@ -74,6 +75,9 @@ check :
 	else\
 		echo "Sanity check succeeded.";\
 	fi
+
+qemu-run : image
+	$(QEMU)-system-i386 -cdrom $(IMG_TARGET)
 
 clean :
 	$(RM) -r $(CLEAN_DIRS)
