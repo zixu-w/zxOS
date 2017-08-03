@@ -114,6 +114,12 @@ void terminal_scroll_up(size_t offset_row) {
   terminal_update(0, 0, VGA_WIDTH, VGA_HEIGHT);
 }
 
+void terminal_clear(void) {
+  terminal_scroll_up(VGA_HEIGHT);
+  terminal_column = 0;
+  terminal_row = 0;
+}
+
 void terminal_setcolor(uint8_t color) {
 	terminal_color = color;
 }
@@ -162,15 +168,16 @@ void kernel_main(void) {
 	/* Newline support is left as an exercise. */
 	terminal_writestring("Hello, kernel World!\n");
 	terminal_writestring("Hello, newline works!\n");
+  terminal_clear();
+	terminal_writestring("Clear works!\n");
 	terminal_writestring(
     "This is a test trying to write across multiple lines to test if lines "
     "are correctly wrapped.\n"
   );
   terminal_writestring(
     "This\nis\na\ntest\ntrying\nto\nwrite\nacross\nthe\nwhole\nscreen\nto\n"
-    "test\nif\nup\nscrolling\nis\nworking.\n"
+    "test\nif\nup\nscrolling\nis\nworking\nor\nnot.\n"
   );
-  terminal_writestring("It works!\n");
   terminal_writestring("\n\n");
   terminal_writestring("Hello, kernel World!");
 }
