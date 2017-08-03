@@ -16,8 +16,8 @@ IMG_GRUB_DIR := $(IMG_BOOT_DIR)/grub
 
 CLEAN_DIRS := $(BINDIR) $(OBJDIR) $(IMGDIR)
 
-BUILD_TARGET := $(BINDIR)/myos.bin
-IMG_TARGET := $(IMGDIR)/myos.iso
+BUILD_TARGET := $(BINDIR)/zxos.bin
+IMG_TARGET := $(IMGDIR)/zxos.iso
 BOOTSTRAP_SRC := boot.s
 KERNEL_SRC := kernel.c
 BOOTSTRAP_OBJ := $(OBJDIR)/boot.o
