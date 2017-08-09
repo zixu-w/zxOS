@@ -55,12 +55,12 @@ $(SYSROOT) \
 
 CLEAN_DIRS := $(DIRS)
 
-all : | pre-install libc kernel
+all : libc kernel
 
-kernel :
+kernel : pre-install
 	$(MAKE) -C $(KERNEL_DIR)
 
-libc :
+libc : pre-install
 	$(MAKE) -C $(LIBC_DIR)
 
 pre-install : | $(SYSROOT)
