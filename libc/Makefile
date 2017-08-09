@@ -1,31 +1,38 @@
-DEFAULT_HOST!=../default-host.sh
-HOST?=DEFAULT_HOST
-HOSTARCH!=../target-triplet-to-arch.sh $(HOST)
+include ../make.config
 
-CFLAGS?=-O2 -g
-CPPFLAGS?=
-LDFLAGS?=
-LIBS?=
+DEFAULT_HOST != ../utils/default-host.sh
+HOST         ?= DEFAULT_HOST
+HOSTARCH     != ../utils/target-triplet-to-arch.sh $(HOST)
 
-DESTDIR?=
-PREFIX?=/usr/local
-EXEC_PREFIX?=$(PREFIX)
-INCLUDEDIR?=$(PREFIX)/include
-LIBDIR?=$(EXEC_PREFIX)/lib
+CFLAGS   ?= -O2 -g
+CPPFLAGS ?=
+LDFLAGS  ?=
+LIBS     ?=
 
-CFLAGS:=$(CFLAGS) -ffreestanding -Wall -Wextra
-CPPFLAGS:=$(CPPFLAGS) -D__is_libc -Iinclude
-LIBK_CFLAGS:=$(CFLAGS)
-LIBK_CPPFLAGS:=$(CPPFLAGS) -D__is_libk
+DESTDIR     ?=
+PREFIX      ?= /usr/local
+EXEC_PREFIX ?= $(PREFIX)
+BOOTDIR     ?= $(EXEC_PREFIX)/boot
+INCLUDEDIR  ?= $(PREFIX)/include
 
-ARCHDIR=arch/$(HOSTARCH)
+CFLAGS        := $(CFLAGS) -ffreestanding -Wall -Wextra
+CPPFLAGS      := $(CPPFLAGS) -D__is_libc -Iinclude
+LIBK_CFLAGS   := $(CFLAGS)
+LIBK_CPPFLAGS := $(CPPFLAGS) -D__is_libk
+
+ARCHDIR := arch/$(HOSTARCH)
 
 include $(ARCHDIR)/make.config
 
-CFLAGS:=$(CFLAGS) $(ARCH_CFLAGS)
-CPPFLAGS:=$(CPPFLAGS) $(ARCH_CPPFLAGS)
-LIBK_CFLAGS:=$(LIBK_CFLAGS) $(KERNEL_ARCH_CFLAGS)
-LIBK_CPPFLAGS:=$(LIBK_CPPFLAGS) $(KERNEL_ARCH_CPPFLAGS)
+AUX_DIRS=\
+$(DESTDIR)$(INCLUDEDIR) \
+$(DESTDIR)$(BOOTDIR) \
+$(DESTDIR)$(LIBDIR) \
+
+CFLAGS        := $(CFLAGS) $(ARCH_CFLAGS)
+CPPFLAGS      := $(CPPFLAGS) $(ARCH_CPPFLAGS)
+LIBK_CFLAGS   := $(LIBK_CFLAGS) $(KERNEL_ARCH_CFLAGS)
+LIBK_CPPFLAGS := $(LIBK_CPPFLAGS) $(KERNEL_ARCH_CPPFLAGS)
 
 FREEOBJS=\
 $(ARCH_FREEOBJS) \
@@ -46,48 +53,55 @@ OBJS=\
 $(FREEOBJS) \
 $(HOSTEDOBJS) \
 
-LIBK_OBJS=$(FREEOBJS:.o=.libk.o)
+LIBK_OBJS = $(FREEOBJS:.o=.libk.o)
 
 #BINARIES=libc.a libk.a # Not ready for libc yet.
-BINARIES=libk.a
+BINARIES = libk.a
 
 .PHONY: all clean install install-headers install-libs
 .SUFFIXES: .o .libk.o .c .S
 
-all: $(BINARIES)
+all : $(BINARIES)
 
-libc.a: $(OBJS)
-	$(AR) rcs $@ $(OBJS)
+libc.a : $(OBJS) | $(BIN_DIR)
+	@:$(call check_defined, CROSS_AR, cross platform ar)
+	$(CROSS_AR) rcs $@ $(OBJS)
 
-libk.a: $(LIBK_OBJS)
-	$(AR) rcs $@ $(LIBK_OBJS)
+libk.a : $(LIBK_OBJS) | $(BIN_DIR)
+	@:$(call check_defined, CROSS_AR, cross platform ar)
+	$(CROSS_AR) rcs $@ $(LIBK_OBJS)
 
-.c.o:
-	$(CC) -MD -c $< -o $@ -std=gnu11 $(CFLAGS) $(CPPFLAGS)
+.c.o :
+	@:$(call check_defined, CROSS_CC, cross platform compiler)
+	$(CROSS_CC) -MD -c $< -o $@ -std=gnu11 $(CFLAGS) $(CPPFLAGS)
 
-.c.S:
-	$(CC) -MD -c $< -o $@ $(CFLAGS) $(CPPFLAGS)
+.c.S :
+	@:$(call check_defined, CROSS_CC, cross platform compiler)
+	$(CROSS_CC) -MD -c $< -o $@ $(CFLAGS) $(CPPFLAGS)
 
-.c.libk.o:
-	$(CC) -MD -c $< -o $@ -std=gnu11 $(LIBK_CFLAGS) $(LIBK_CPPFLAGS)
+.c.libk.o :
+	@:$(call check_defined, CROSS_CC, cross platform compiler)
+	$(CROSS_CC) -MD -c $< -o $@ -std=gnu11 $(LIBK_CFLAGS) $(LIBK_CPPFLAGS)
 
-.S.libk.o:
-	$(CC) -MD -c $< -o $@ $(LIBK_CFLAGS) $(LIBK_CPPFLAGS)
+.S.libk.o :
+	@:$(call check_defined, CROSS_AS, cross platform assembler)
+	$(CROSS_AS) -c $< -o $@
 
-clean:
-	rm -f $(BINARIES) *.a
-	rm -f $(OBJS) $(LIBK_OBJS) *.o */*.o */*/*.o
-	rm -f $(OBJS:.o=.d) $(LIBK_OBJS:.o=.d) *.d */*.d */*/*.d
+clean :
+	$(RM) $(BINARIES) *.a
+	$(RM) $(OBJS) $(LIBK_OBJS) *.o */*.o */*/*.o
+	$(RM) $(OBJS:.o=.d) $(LIBK_OBJS:.o=.d) *.d */*.d */*/*.d
 
-install: install-headers install-libs
+install : install-headers install-libs
 
-install-headers:
-	mkdir -p $(DESTDIR)$(INCLUDEDIR)
+install-headers : | $(DESTDIR)$(INCLUDEDIR)
 	cp -R --preserve=timestamps include/. $(DESTDIR)$(INCLUDEDIR)/.
 
-install-libs: $(BINARIES)
-	mkdir -p $(DESTDIR)$(LIBDIR)
+install-libs: $(BINARIES) | $(DESTDIR)$(LIBDIR)
 	cp $(BINARIES) $(DESTDIR)$(LIBDIR)
+
+$(AUX_DIRS) :
+	mkdir -p $@
 
 -include $(OBJS:.o=.d)
 -include $(LIBK_OBJS:.o=.d)

@@ -1,35 +1,44 @@
-DEFAULT_HOST!=../default-host.sh
-HOST?=DEFAULT_HOST
-HOSTARCH!=../target-triplet-to-arch.sh $(HOST)
+include ../make.config
 
-CFLAGS?=-O2 -g
-CPPFLAGS?=
-LDFLAGS?=
-LIBS?=
+DEFAULT_HOST != ../utils/default-host.sh
+HOST         ?= DEFAULT_HOST
+HOSTARCH     != ../utils/target-triplet-to-arch.sh $(HOST)
+HOSTPLAT     != ../utils/target-triplet-to-plat.sh $(HOST)
+BOOT_TYPE    != ../utils/default-boot.sh
 
-DESTDIR?=
-PREFIX?=/usr/local
-EXEC_PREFIX?=$(PREFIX)
-BOOTDIR?=$(EXEC_PREFIX)/boot
-INCLUDEDIR?=$(PREFIX)/include
+CFLAGS   ?= -O2 -g
+CPPFLAGS ?=
+LDFLAGS  ?=
+LIBS     ?=
 
-CFLAGS:=$(CFLAGS) -ffreestanding -Wall -Wextra
-CPPFLAGS:=$(CPPFLAGS) -D__is_kernel -Iinclude
-LDFLAGS:=$(LDFLAGS)
-LIBS:=$(LIBS) -nostdlib -lk -lgcc
+DESTDIR     ?=
+PREFIX      ?= /usr/local
+EXEC_PREFIX ?= $(PREFIX)
+BOOTDIR     ?= $(EXEC_PREFIX)/boot
+INCLUDEDIR  ?= $(PREFIX)/include
 
-ARCHDIR=arch/$(HOSTARCH)
+CFLAGS   := $(CFLAGS) -ffreestanding -Wall -Wextra
+CPPFLAGS := $(CPPFLAGS) -D__is_kernel -Iinclude
+LDFLAGS  := $(LDFLAGS)
+LIBS     := $(LIBS) -nostdlib -lk -lgcc
+
+KERNEL_DIR     := kernel
+ARCHDIR        := arch/$(HOSTARCH)
+
+AUX_DIRS=\
+$(DESTDIR)$(INCLUDEDIR) \
+$(DESTDIR)$(BOOTDIR) \
 
 include $(ARCHDIR)/make.config
 
-CFLAGS:=$(CFLAGS) $(KERNEL_ARCH_CFLAGS)
-CPPFLAGS:=$(CPPFLAGS) $(KERNEL_ARCH_CPPFLAGS)
-LDFLAGS:=$(LDFLAGS) $(KERNEL_ARCH_LDFLAGS)
-LIBS:=$(LIBS) $(KERNEL_ARCH_LIBS)
+CFLAGS   := $(CFLAGS)   $(KERNEL_ARCH_CFLAGS)
+CPPFLAGS := $(CPPFLAGS) $(KERNEL_ARCH_CPPFLAGS)
+LDFLAGS  := $(LDFLAGS)  $(KERNEL_ARCH_LDFLAGS)
+LIBS     := $(LIBS)     $(KERNEL_ARCH_LIBS)
 
 KERNEL_OBJS=\
 $(KERNEL_ARCH_OBJS) \
-kernel/kernel.o \
+$(KERNEL_DIR)/kernel.o \
 
 OBJS=\
 $(ARCHDIR)/crti.o \
@@ -47,37 +56,50 @@ $(LIBS) \
 $(ARCHDIR)/crtend.o \
 $(ARCHDIR)/crtn.o \
 
-.PHONY: all clean install install-headers install-kernel
-.SUFFIXES: .o .c .S
+PROG_NAME    ?= zxos
+KERNEL_NAME  := $(PROG_NAME).bin
+BUILD_TARGET := $(KERNEL_DIR)/$(KERNEL_NAME)
 
-all: myos.kernel
+CHECK := $(CROSS_GRUB)-file --is-$(HOSTPLAT)-$(BOOT_TYPE) $(BUILD_TARGET)
 
-myos.kernel: $(OBJS) $(ARCHDIR)/linker.ld
-	$(CC) -T $(ARCHDIR)/linker.ld -o $@ $(CFLAGS) $(LINK_LIST)
-	grub-file --is-x86-multiboot myos.kernel
+.PHONY    : all clean install install-headers install-kernel
+.SUFFIXES :
+.SUFFIXES : .o .c .S
 
-$(ARCHDIR)/crtbegin.o $(ARCHDIR)/crtend.o:
-	OBJ=`$(CC) $(CFLAGS) $(LDFLAGS) -print-file-name=$(@F)` && cp "$$OBJ" $@
+all : $(BUILD_TARGET)
 
-.c.o:
-	$(CC) -MD -c $< -o $@ -std=gnu11 $(CFLAGS) $(CPPFLAGS)
+$(BUILD_TARGET) : $(OBJS) $(ARCHDIR)/linker.ld | $(KERNEL_BIN_DIR)
+	@:$(call check_defined, CROSS_LINKER, cross platform linker)
+	$(CROSS_LINKER) -T $(ARCHDIR)/linker.ld -o $@ $(CFLAGS) $(LINK_LIST)
+	@:$(call check_defined, CROSS_GRUB, cross platform grub)
+	$(CHECK)
 
-.S.o:
-	$(CC) -MD -c $< -o $@ $(CFLAGS) $(CPPFLAGS)
+$(ARCHDIR)/crtbegin.o $(ARCHDIR)/crtend.o :
+	@:$(call check_defined, CROSS_CC, cross platform C compiler)
+	OBJ=`$(CROSS_CC) $(CFLAGS) $(LDFLAGS) -print-file-name=$(@F)` && cp "$$OBJ" $@
 
-clean:
-	rm -f myos.kernel
-	rm -f $(OBJS) *.o */*.o */*/*.o
-	rm -f $(OBJS:.o=.d) *.d */*.d */*/*.d
+.c.o :
+	@:$(call check_defined, CROSS_CC, cross platform C compiler)
+	$(CROSS_CC) -MD -c $< -o $@ -std=gnu11 $(CFLAGS) $(CPPFLAGS)
 
-install: install-headers install-kernel
+.S.o :
+	@:$(call check_defined, CROSS_AS, cross platform assembler)
+	$(CROSS_AS) -c $< -o $@
 
-install-headers:
-	mkdir -p $(DESTDIR)$(INCLUDEDIR)
+$(AUX_DIRS) :
+	mkdir -p $@
+
+clean :
+	$(RM) $(BUILD_TARGET)
+	$(RM) $(OBJS) *.o */*.o */*/*.o
+	$(RM) $(OBJS:.o=.d) *.d */*.d */*/*.d
+
+install : install-headers install-kernel
+
+install-headers : | $(DESTDIR)$(INCLUDEDIR)
 	cp -R --preserve=timestamps include/. $(DESTDIR)$(INCLUDEDIR)/.
 
-install-kernel: myos.kernel
-	mkdir -p $(DESTDIR)$(BOOTDIR)
-	cp myos.kernel $(DESTDIR)$(BOOTDIR)
+install-kernel : $(BUILD_TARGET) | $(DESTDIR)$(BOOTDIR)
+	cp $(BUILD_TARGET) $(DESTDIR)$(BOOTDIR)
 
 -include $(OBJS:.o=.d)

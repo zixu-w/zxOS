@@ -1,101 +1,91 @@
-.PHONY : all clean check image qemu-run
+include make.config
 
-check_defined = \
-  $(strip $(foreach 1,$1, \
-    $(call __check_defined,$1,$(strip $(value 2)))))
-__check_defined = \
-  $(if $(value $1),, \
-    $(error Undefined $1$(if $2, ($2))))
+.PHONY : all pre-install kernel libc install image qemu-run clean
 
-BINDIR := bin
-OBJDIR := obj
-IMGDIR := image
+PWD != pwd
+
+export HOST       != utils/default-host.sh
+export PREFIX     ?= /usr
+export EXEC_PREFIX = $(PREFIX)
+export BOOTDIR     = /boot
+export LIBDIR      = $(EXEC_PREFIX)/lib
+export INCLUDEDIR  = $(PREFIX)/include
+export PROG_NAME   = zxos
+
+KERNEL_NAME := $(PROG_NAME).bin
+KERNEL_DIR  := kernel
+LIBC_DIR    := libc
+
+IMGDIR       := image
 IMG_WORK_DIR := $(IMGDIR)/iso
 IMG_BOOT_DIR := $(IMG_WORK_DIR)/boot
 IMG_GRUB_DIR := $(IMG_BOOT_DIR)/grub
+IMG_TARGET   := $(IMGDIR)/zxos.iso
 
-CLEAN_DIRS := $(BINDIR) $(OBJDIR) $(IMGDIR)
+CROSS_PATH ?= /usr/local/cross
+SYSROOT    ?= $(PWD)/sysroot
 
-BUILD_TARGET := $(BINDIR)/zxos.bin
-IMG_TARGET := $(IMGDIR)/zxos.iso
-BOOTSTRAP_SRC := boot.s
-KERNEL_SRC := kernel.c
-BOOTSTRAP_OBJ := $(OBJDIR)/boot.o
-KERNEL_OBJ := $(OBJDIR)/kernel.o
-LINKER_SCRIPT := linker.ld
-GRUB_CONFIG := grub.cfg
+KERNEL_TARGET := $(SYSROOT)/boot/$(KERNEL_NAME)
 
-TARGET := i686-elf
-PLAT := x86
-BOOT_TYPE := multiboot
-QEMU_PLAT := i386
-CROSS_PATH := /usr/local/cross
+export DESTDIR = $(SYSROOT)
 
-CROSS_AS := $(CROSS_PATH)/bin/$(TARGET)-as
-CROSS_CC := $(CROSS_PATH)/bin/$(TARGET)-gcc
-CROSS_LINKER := $(CROSS_PATH)/bin/$(TARGET)-gcc
-CROSS_GRUB := $(CROSS_PATH)/bin/grub
-QEMU := qemu
+CROSS_AR     ?= $(CROSS_PATH)/bin/$(HOST)-ar
+CROSS_AS     ?= $(CROSS_PATH)/bin/$(HOST)-as
+CROSS_CC     ?= $(CROSS_PATH)/bin/$(HOST)-gcc
+CROSS_LINKER ?= $(CROSS_PATH)/bin/$(HOST)-gcc
+CROSS_GRUB   ?= $(CROSS_PATH)/bin/grub
 
-CFLAGS := -std=gnu99 -ffreestanding -O2 -Wall -Wextra
-LINKFLAGS := -ffreestanding -O2 -nostdlib -lgcc
+CC_MOD       != utils/decorate-cc.sh $(HOST) $(INCLUDEDIR)
+CROSS_CC     := $(CROSS_CC) --sysroot=$(SYSROOT) $(CC_MOD)
+CROSS_LINKER := $(CROSS_LINKER) --sysroot=$(SYSROOT)
 
-CHECK := $(CROSS_GRUB)-file --is-$(PLAT)-$(BOOT_TYPE) $(BUILD_TARGET)
+export CROSS_AR CROSS_AS CROSS_CC CROSS_LINKER CROSS_GRUB
+
+QEMU         ?= qemu
+QEMU_PLAT    != utils/target-triplet-to-arch.sh $(HOST)
 QEMU_COMMAND := $(QEMU)-system-$(QEMU_PLAT)
+GRUB_CONFIG  := utils/grub.cfg
 
-all : $(BUILD_TARGET)
-	@:$(call check_defined, TARGET, target info)
-	@:$(call check_defined, CROSS_PATH, path to cross-platform utils)
+DIRS=\
+$(IMGDIR) \
+$(IMG_WORK_DIR) \
+$(IMG_BOOT_DIR) \
+$(IMG_GRUB_DIR) \
+$(SYSROOT) \
 
-image : all $(IMG_TARGET)
-	@:$(call check_defined, PLAT, platform info)
-	@:$(call check_defined, BOOT_TYPE, boot type)
+CLEAN_DIRS := $(DIRS)
 
-$(BUILD_TARGET) : $(BOOTSTRAP_OBJ) $(KERNEL_OBJ) | $(BINDIR) $(LINKER_SCRIPT)
-	$(info Linking target.)
-	$(CROSS_LINKER) -T $(LINKER_SCRIPT) $^ $(LINKFLAGS) -o $@
-	$(info Build complete. Performing sanity check.)
-	$(CHECK)
-	@if [ $$? -ne 0 ]; then\
-		echo "Sanity check failed!";\
-		exit $$?;\
-	else\
-		echo "Sanity check succeeded.";\
-	fi
+all : | pre-install libc kernel
 
-$(BOOTSTRAP_OBJ) : $(BOOTSTRAP_SRC) | $(OBJDIR)
-	$(info Assembling bootstrap.)
-	$(CROSS_AS) $^ -o $@
+kernel :
+	$(MAKE) -C $(KERNEL_DIR)
 
-$(KERNEL_OBJ) : $(KERNEL_SRC) | $(OBJDIR)
-	$(info Compiling kernel.)
-	$(CROSS_CC) -c $^ $(CFLAGS) -o $@
+libc :
+	$(MAKE) -C $(LIBC_DIR)
 
-$(IMG_TARGET) : $(BUILD_TARGET) $(GRUB_CONFIG)
-	mkdir -p $(IMG_GRUB_DIR)
-	cp $(BUILD_TARGET) $(IMG_BOOT_DIR)
+pre-install : | $(SYSROOT)
+	$(MAKE) -C $(LIBC_DIR) install-headers
+	$(MAKE) -C $(KERNEL_DIR) install-headers
+	$(MAKE) -C $(LIBC_DIR) install-libs
+
+install : all
+	$(MAKE) -C $(LIBC_DIR) install
+	$(MAKE) -C $(KERNEL_DIR) install
+
+image : install $(IMG_TARGET)
+
+$(IMG_TARGET) : $(GRUB_CONFIG) | $(IMG_GRUB_DIR) $(IMG_BOOT_DIR) $(IMG_WORK_DIR)
+	cp $(KERNEL_TARGET) $(IMG_BOOT_DIR)
 	cp $(GRUB_CONFIG) $(IMG_GRUB_DIR)
 	$(CROSS_GRUB)-mkrescue -o $@ $(IMG_WORK_DIR)
 
-$(BINDIR) :
+$(DIRS) :
 	mkdir -p $@
-
-$(OBJDIR) :
-	mkdir -p $@
-
-check :
-	$(info Performing sanity check.)
-	$(CHECK)
-	@if [ $$? -ne 0 ]; then\
-		echo "Sanity check failed!";\
-		exit $$?;\
-	else\
-		echo "Sanity check succeeded.";\
-	fi
 
 qemu-run : image
-	@:$(call check_defined, QEMU_PLAT, qemu target platform)
 	$(QEMU_COMMAND) -cdrom $(IMG_TARGET)
 
 clean :
+	$(MAKE) -C kernel clean
+	$(MAKE) -C libc clean
 	$(RM) -r $(CLEAN_DIRS)
