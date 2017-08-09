@@ -1,6 +1,6 @@
 include make.config
 
-.PHONY : all pre-install kernel libc install image qemu-run clean
+.PHONY : all pre-install kernel libc install image qemu-run clean dependencies
 
 PWD != pwd
 
@@ -89,3 +89,6 @@ clean :
 	$(MAKE) -C kernel clean
 	$(MAKE) -C libc clean
 	$(RM) -r $(CLEAN_DIRS)
+
+dependencies :
+	utils/install-dependencies.sh
