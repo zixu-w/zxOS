@@ -79,7 +79,7 @@ pre-install : | $(SYSROOT)
 	$(MAKE) -C $(KERNEL_DIR) install-headers
 	$(MAKE) -C $(LIBC_DIR) install-libs
 
-install : all
+install :
 	$(MAKE) -C $(LIBC_DIR) install
 	$(MAKE) -C $(KERNEL_DIR) install
 
