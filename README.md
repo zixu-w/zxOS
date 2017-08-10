@@ -1,4 +1,4 @@
-# barebone
+# zxOS
 Bare bone kernel based on tutorial http://wiki.osdev.org/
 
 ## How to build
