@@ -11,8 +11,6 @@ sleep 2
 
 # TODO: more compatible with other systems
 yes | sudo apt-get install libgmp3-dev libmpfr-dev libmpc-dev texinfo
-# TODO: maybe not to install these two by default
-yes | sudo apt-get install xorriso qemu
 
 BINUTILS_VER=2.29
 GCC_VER=7.1.0
