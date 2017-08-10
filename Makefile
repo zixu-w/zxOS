@@ -5,6 +5,7 @@ include make.config
 PWD != pwd
 
 export HOST       != utils/default-host.sh
+export BOOT_TYPE  != utils/default-boot.sh
 export PREFIX     ?= /usr
 export EXEC_PREFIX = $(PREFIX)
 export BOOTDIR     = /boot
@@ -12,9 +13,13 @@ export LIBDIR      = $(EXEC_PREFIX)/lib
 export INCLUDEDIR  = $(PREFIX)/include
 export PROG_NAME   = zxos
 
-KERNEL_NAME := $(PROG_NAME).bin
+HOSTARCH    != utils/target-triplet-to-arch.sh $(HOST)
+KERNEL_NAME := $(PROG_NAME).$(HOSTARCH)
 KERNEL_DIR  := kernel
 LIBC_DIR    := libc
+DEP_DIR     ?= dep
+
+export KERNEL_NAME
 
 IMGDIR       := image
 IMG_WORK_DIR := $(IMGDIR)/iso
@@ -41,10 +46,10 @@ CROSS_LINKER := $(CROSS_LINKER) --sysroot=$(SYSROOT)
 
 export CROSS_AR CROSS_AS CROSS_CC CROSS_LINKER CROSS_GRUB
 
-QEMU         ?= qemu
-QEMU_PLAT    != utils/target-triplet-to-arch.sh $(HOST)
-QEMU_COMMAND := $(QEMU)-system-$(QEMU_PLAT)
-GRUB_CONFIG  := utils/grub.cfg
+QEMU             ?= qemu
+QEMU_COMMAND     := $(QEMU)-system-$(HOSTARCH)
+GRUB_CONFIG      := $(IMG_GRUB_DIR)/grub.cfg
+GRUB_CONFIG_TMP  := utils/grub.cfg.template
 
 DIRS=\
 $(IMGDIR) \
@@ -52,6 +57,7 @@ $(IMG_WORK_DIR) \
 $(IMG_BOOT_DIR) \
 $(IMG_GRUB_DIR) \
 $(SYSROOT) \
+$(DEP_DIR) \
 
 CLEAN_DIRS := $(DIRS)
 
@@ -74,10 +80,15 @@ install : all
 
 image : install $(IMG_TARGET)
 
-$(IMG_TARGET) : $(GRUB_CONFIG) | $(IMG_GRUB_DIR) $(IMG_BOOT_DIR) $(IMG_WORK_DIR)
+$(IMG_TARGET) : | $(IMG_GRUB_DIR) $(IMG_BOOT_DIR) $(IMG_WORK_DIR) $(GRUB_CONFIG)
 	cp $(KERNEL_TARGET) $(IMG_BOOT_DIR)
-	cp $(GRUB_CONFIG) $(IMG_GRUB_DIR)
 	$(CROSS_GRUB)-mkrescue -o $@ $(IMG_WORK_DIR)
+
+$(GRUB_CONFIG) : | $(GRUB_CONFIG_TMP)
+	cp $(GRUB_CONFIG_TMP) $(GRUB_CONFIG)
+	sed -i "s/{PROG_NAME}/$$PROG_NAME/g" $(GRUB_CONFIG)
+	sed -i "s/{BOOT_TYPE}/$$BOOT_TYPE/g" $(GRUB_CONFIG)
+	sed -i "s/{KERNEL_NAME}/$$KERNEL_NAME/g" $(GRUB_CONFIG)
 
 $(DIRS) :
 	mkdir -p $@
@@ -90,5 +101,8 @@ clean :
 	$(MAKE) -C libc clean
 	$(RM) -r $(CLEAN_DIRS)
 
-dependencies :
+dependencies : | $(DEP_DIR)
+	env WORK_DIR=$(DEP_DIR) \
+	PREFIX=$(CROSS_PATH) \
+	TARGET=$(HOST) \
 	utils/install-dependencies.sh

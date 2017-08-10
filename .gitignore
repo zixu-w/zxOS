@@ -53,6 +53,6 @@ Mkfile.old
 dkms.conf
 
 # Ignored directories
-obj
-bin
+sysroot
+dep
 image

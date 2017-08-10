@@ -4,7 +4,6 @@ DEFAULT_HOST != ../utils/default-host.sh
 HOST         ?= DEFAULT_HOST
 HOSTARCH     != ../utils/target-triplet-to-arch.sh $(HOST)
 HOSTPLAT     != ../utils/target-triplet-to-plat.sh $(HOST)
-BOOT_TYPE    != ../utils/default-boot.sh
 
 CFLAGS   ?= -O2 -g
 CPPFLAGS ?=
@@ -57,7 +56,7 @@ $(ARCHDIR)/crtend.o \
 $(ARCHDIR)/crtn.o \
 
 PROG_NAME    ?= zxos
-KERNEL_NAME  := $(PROG_NAME).bin
+KERNEL_NAME  ?= $(PROG_NAME).$(HOSTARCH)
 BUILD_TARGET := $(KERNEL_DIR)/$(KERNEL_NAME)
 
 CHECK := $(CROSS_GRUB)-file --is-$(HOSTPLAT)-$(BOOT_TYPE) $(BUILD_TARGET)
