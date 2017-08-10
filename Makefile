@@ -59,7 +59,12 @@ $(IMG_GRUB_DIR) \
 $(SYSROOT) \
 $(DEP_DIR) \
 
-CLEAN_DIRS := $(DIRS)
+CLEAN_DIRS=\
+$(IMGDIR) \
+$(IMG_WORK_DIR) \
+$(IMG_BOOT_DIR) \
+$(IMG_GRUB_DIR) \
+$(SYSROOT) \
 
 all : libc kernel
 
