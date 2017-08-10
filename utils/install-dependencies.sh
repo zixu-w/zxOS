@@ -7,7 +7,7 @@ GRUB_VER=2.02
 
 export PATH="$PREFIX/bin:$PATH"
 
-pushd $WORK_DIR
+pushd ../$WORK_DIR
 
 rm -rf binutils-$BINUTILS_VER gcc-$GCC_VER grub-$GRUB_VER
 rm -rf build-binutils build-gcc build-grub
