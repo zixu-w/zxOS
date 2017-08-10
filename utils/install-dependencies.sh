@@ -1,12 +1,18 @@
 #!/bin/bash
 set -e
 
+echo
+echo "============================================="
 echo "Installing tool-chain and required libraries."
 echo "Please enter password for sudo when prompted."
-sleep 5
+echo "============================================="
+echo
+sleep 2
 
 # TODO: more compatible with other systems
-sudo apt-get install libgmp3-dev libmpfr-dev libmpc-dev texinfo
+yes | sudo apt-get install libgmp3-dev libmpfr-dev libmpc-dev texinfo
+# TODO: maybe not to install these two by default
+yes | sudo apt-get install xorriso qemu
 
 BINUTILS_VER=2.29
 GCC_VER=7.1.0
@@ -49,8 +55,8 @@ pushd build-binutils
 --target=$TARGET --prefix="$PREFIX" --with-sysroot \
 --disable-nls --disable-werror
 
-make -j
-sudo make install -j
+make -j4
+sudo make install -j4
 
 popd
 
@@ -62,10 +68,10 @@ pushd build-gcc
 --target=$TARGET --prefix="$PREFIX" \
 --disable-nls --enable-languages=c,c++ --without-headers
 
-make all-gcc -j
-sudo make all-target-libgcc -j
-sudo make install-gcc -j
-sudo make install-target-libgcc -j
+make all-gcc -j4
+make all-target-libgcc -j4
+sudo make install-gcc -j4
+sudo make install-target-libgcc -j4
 
 popd
 
@@ -75,8 +81,8 @@ pushd build-grub
 --target=$TARGET --prefix="$PREFIX" \
 --disable-nls --disable-werror
 
-make -j
-sudo make install -j
+make -j4
+sudo make install -j4
 
 popd
 
