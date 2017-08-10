@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 set -e
 
 BINUTILS_VER=2.29
@@ -7,7 +7,7 @@ GRUB_VER=2.02
 
 export PATH="$PREFIX/bin:$PATH"
 
-pushd ../$WORK_DIR
+pushd $WORK_DIR
 
 rm -rf binutils-$BINUTILS_VER gcc-$GCC_VER grub-$GRUB_VER
 rm -rf build-binutils build-gcc build-grub
@@ -30,7 +30,10 @@ else
   echo "grub-$GRUB_VER.tar.gz exists."
 fi
 
-tar xvf *.tar.gz
+tar xvf binutils-$BINUTILS_VER.tar.gz
+tar xvf gcc-$GCC_VER.tar.gz
+tar xvf grub-$GRUB_VER.tar.gz
+
 mkdir build-binutils build-gcc build-grub
 
 pushd build-binutils

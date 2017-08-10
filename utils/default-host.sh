@@ -1,2 +1,2 @@
-#!/bin/sh
+#!/bin/bash
 echo i686-elf
