@@ -73,14 +73,13 @@ kernel : pre-install
 
 libc : pre-install
 	$(MAKE) -C $(LIBC_DIR)
+	$(MAKE) -C $(LIBC_DIR) install-libs
 
 pre-install : | $(SYSROOT)
 	$(MAKE) -C $(LIBC_DIR) install-headers
 	$(MAKE) -C $(KERNEL_DIR) install-headers
-	$(MAKE) -C $(LIBC_DIR) install-libs
 
 install :
-	$(MAKE) -C $(LIBC_DIR) install
 	$(MAKE) -C $(KERNEL_DIR) install
 
 image : $(IMG_TARGET)
