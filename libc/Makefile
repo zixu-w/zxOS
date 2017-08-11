@@ -34,17 +34,12 @@ CPPFLAGS      := $(CPPFLAGS) $(ARCH_CPPFLAGS)
 LIBK_CFLAGS   := $(LIBK_CFLAGS) $(KERNEL_ARCH_CFLAGS)
 LIBK_CPPFLAGS := $(LIBK_CPPFLAGS) $(KERNEL_ARCH_CPPFLAGS)
 
+SOURCES      != find . -name "*.c" -o -name "*.S"
+LIB_FREEOBJS := $(addsuffix .o, $(basename $(SOURCES)))
+
 FREEOBJS=\
 $(ARCH_FREEOBJS) \
-stdio/printf.o \
-stdio/putchar.o \
-stdio/puts.o \
-stdlib/abort.o \
-string/memcmp.o \
-string/memcpy.o \
-string/memmove.o \
-string/memset.o \
-string/strlen.o \
+$(LIB_FREEOBJS) \
 
 HOSTEDOBJS=\
 $(ARCH_HOSTEDOBJS) \
