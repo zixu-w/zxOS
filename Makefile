@@ -83,9 +83,9 @@ install :
 	$(MAKE) -C $(LIBC_DIR) install
 	$(MAKE) -C $(KERNEL_DIR) install
 
-image : install $(IMG_TARGET)
+image : $(IMG_TARGET)
 
-$(IMG_TARGET) : | $(IMG_GRUB_DIR) $(IMG_BOOT_DIR) $(IMG_WORK_DIR) $(GRUB_CONFIG)
+$(IMG_TARGET) : $(KERNEL_TARGET) | $(IMG_GRUB_DIR) $(IMG_BOOT_DIR) $(IMG_WORK_DIR) $(GRUB_CONFIG)
 	cp $(KERNEL_TARGET) $(IMG_BOOT_DIR)
 	$(CROSS_GRUB)-mkrescue -o $@ $(IMG_WORK_DIR)
 
