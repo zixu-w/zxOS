@@ -35,8 +35,8 @@ CPPFLAGS := $(CPPFLAGS) $(KERNEL_ARCH_CPPFLAGS)
 LDFLAGS  := $(LDFLAGS)  $(KERNEL_ARCH_LDFLAGS)
 LIBS     := $(LIBS)     $(KERNEL_ARCH_LIBS)
 
-SOURCES       != find $(KERNEL_DIR) -name "*.c" -o -name "*.S"
-KERNEL_K_OBJS := $(addsuffix .o, $(basename $(SOURCES)))
+KERNEL_K_SRCS != find $(KERNEL_DIR) -name "*.c" -o -name "*.S"
+KERNEL_K_OBJS := $(addsuffix .o, $(basename $(KERNEL_K_SRCS)))
 
 KERNEL_OBJS=\
 $(KERNEL_ARCH_OBJS) \
