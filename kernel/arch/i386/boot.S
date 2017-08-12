@@ -75,6 +75,7 @@ _start:
 	C++ features such as global constructors and exceptions will require
 	runtime support to work as well.
 	*/
+  call kernel_init
   call _init
 
 	/*
