@@ -1,6 +1,10 @@
 #include <stdint.h>
 #include <stddef.h>
 
+#ifdef _KERNEL_DEBUG
+#include <stdio.h>
+#endif
+
 #include "descriptor_tables.h"
 
 extern void gdt_flush(uint32_t);
@@ -12,10 +16,19 @@ gdt_entry_t gdt_entries[5];
 gdt_ptr_t   gdt_ptr;
 
 void init_descriptor_tables(void) {
+#ifdef _KERNEL_DEBUG
+  printf("[INFO] Initializing descriptor tables.\n");
+#endif
   init_gdt();
+#ifdef _KERNEL_DEBUG
+  printf("[INFO] Descriptor tables initialized.\n");
+#endif
 }
 
 static void init_gdt(void) {
+#ifdef _KERNEL_DEBUG
+  printf("[INFO] Initializing GDT.\n");
+#endif
   gdt_ptr.limit = (sizeof(gdt_entry_t) * 5) - 1;
   gdt_ptr.base  = (uint32_t) &gdt_entries;
 
@@ -24,8 +37,13 @@ static void init_gdt(void) {
   gdt_set_gate(2, 0, 0xFFFFFFFF, 0x92, 0xCF); // Data segment
   gdt_set_gate(3, 0, 0xFFFFFFFF, 0xFA, 0xCF); // User mode code segment
   gdt_set_gate(4, 0, 0xFFFFFFFF, 0xF2, 0xCF); // User mode data segment
-
+#ifdef _KERNEL_DEBUG
+  printf("[INFO] Flushing initialized GDT.\n");
+#endif
   gdt_flush((uint32_t) &gdt_ptr);
+#ifdef _KERNEL_DEBUG
+  printf("[INFO] GDT flushed.\n");
+#endif
 }
 
 static void gdt_set_gate(size_t num,
