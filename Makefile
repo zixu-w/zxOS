@@ -1,6 +1,6 @@
 include make.config
 
-.PHONY : all pre-install kernel libc install image qemu-run clean dependencies
+.PHONY : all debug pre-install kernel libc install image qemu-run clean dependencies
 
 PWD != pwd
 
@@ -46,9 +46,6 @@ CROSS_LINKER := $(CROSS_LINKER) --sysroot=$(SYSROOT)
 
 export CROSS_AR CROSS_AS CROSS_CC CROSS_LINKER CROSS_GRUB
 
-CPPFLAGS ?= -D_KERNEL_NDEBUG
-export CPPFLAGS
-
 QEMU             ?= qemu
 QEMU_COMMAND     := $(QEMU)-system-$(HOSTARCH)
 GRUB_CONFIG      := $(IMG_GRUB_DIR)/grub.cfg
@@ -70,6 +67,9 @@ $(IMG_GRUB_DIR) \
 $(SYSROOT) \
 
 all : libc kernel
+
+debug : export CPPFLAGS += -D_KERNEL_DEBUG
+debug : all
 
 kernel : pre-install
 	$(MAKE) -C $(KERNEL_DIR)
