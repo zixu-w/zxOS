@@ -4,8 +4,7 @@
 #include <string.h>
 
 #include <kernel/tty.h>
-
-#include "vga.h"
+#include <kernel/vga.h>
 
 static const size_t    VGA_WIDTH  = _VGA_WIDTH;
 static const size_t    VGA_HEIGHT = _VGA_HEIGHT;

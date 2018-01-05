@@ -1,5 +1,4 @@
 #include <stdint.h>
-#include <stdlib.h>
 
 #if UINT32_MAX == UINTPTR_MAX
 #define STACK_CHK_GUARD 0xe2dee396
@@ -10,4 +9,7 @@
 uintptr_t __stack_chk_guard = STACK_CHK_GUARD;
 
 __attribute__((__noreturn__))
-void __stack_chk_fail(void) { abort(); }
+void __stack_chk_fail(void) {
+  panic("Stack overflow detected.");
+  __builtin_unreachable();
+}

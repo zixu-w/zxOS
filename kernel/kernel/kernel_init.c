@@ -11,11 +11,17 @@ extern "C"
 void kernel_init(void) {
   terminal_initialize();
 #ifdef _KERNEL_DEBUG
-  printf("[INFO] Initializing kernel.\n");
+  terminal_setcolor(vga_entry_color(VGA_COLOR_LIGHT_GREEN, VGA_COLOR_BLACK));
+  printf("[INFO] ");
+  terminal_setcolor(vga_entry_color(VGA_COLOR_LIGHT_GREY, VGA_COLOR_BLACK));
+  printf("Initializing kernel.\n");
 #endif
   init_cpu();
   init_mem();
 #ifdef _KERNEL_DEBUG
-  printf("[INFO] Kernel initialized.\n");
+  terminal_setcolor(vga_entry_color(VGA_COLOR_LIGHT_GREEN, VGA_COLOR_BLACK));
+  printf("[INFO] ");
+  terminal_setcolor(vga_entry_color(VGA_COLOR_LIGHT_GREY, VGA_COLOR_BLACK));
+  printf("Kernel initialized.\n");
 #endif
 }
