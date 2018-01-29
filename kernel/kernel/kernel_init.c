@@ -23,5 +23,14 @@ void kernel_init(multiboot_info_t* mbi) {
   printf("[INFO] ");
   terminal_setcolor(vga_entry_color(VGA_COLOR_LIGHT_GREY, VGA_COLOR_BLACK));
   printf("Kernel initialized.\n");
+  printf("    text section:   0x%x - 0x%x\n",
+         (uint32_t) &text_section_start, (uint32_t) &text_section_end);
+  printf("    rodata section: 0x%x - 0x%x\n",
+         (uint32_t) &rodata_section_start, (uint32_t) &rodata_section_end);
+  printf("    data section:   0x%x - 0x%x\n",
+         (uint32_t) &data_section_start, (uint32_t) &data_section_end);
+  printf("    bss section:    0x%x - 0x%x\n",
+         (uint32_t) &bss_section_start, (uint32_t) &bss_section_end);
+  printf("    kernel end:     0x%x\n", (uint32_t) &kernel_end);
 #endif
 }

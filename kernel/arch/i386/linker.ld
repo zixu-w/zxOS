@@ -13,31 +13,40 @@ SECTIONS
 	/* First put the multiboot header, as it is required to be put very early
 	   early in the image or the bootloader won't recognize the file format.
 	   Next we'll put the .text section. */
+  text_section_start = .;
 	.text BLOCK(4K) : ALIGN(4K)
 	{
 		*(.multiboot)
 		*(.text)
 	}
+  text_section_end = .;
 
 	/* Read-only data. */
+  rodata_section_start = .;
 	.rodata BLOCK(4K) : ALIGN(4K)
 	{
 		*(.rodata)
 	}
+  rodata_section_end = .;
 
 	/* Read-write data (initialized) */
+  data_section_start = .;
 	.data BLOCK(4K) : ALIGN(4K)
 	{
 		*(.data)
 	}
+  data_section_end = .;
 
 	/* Read-write data (uninitialized) and stack */
+  bss_section_start = .;
 	.bss BLOCK(4K) : ALIGN(4K)
 	{
 		*(COMMON)
 		*(.bss)
 	}
+  bss_section_end = .;
 
 	/* The compiler may produce other sections, by default it will put them in
 	   a segment with the same name. Simply add stuff here as needed. */
+  kernel_end = ALIGN(4K);
 }
