@@ -47,6 +47,7 @@ CROSS_LINKER := $(CROSS_LINKER) --sysroot=$(SYSROOT)
 export CROSS_AR CROSS_AS CROSS_CC CROSS_LINKER CROSS_GRUB
 
 QEMU             ?= qemu
+QEMU_OPTION      ?= -cdrom $(IMG_TARGET) -m 4G
 QEMU_COMMAND     := $(QEMU)-system-$(HOSTARCH)
 GRUB_CONFIG      := $(IMG_GRUB_DIR)/grub.cfg
 GRUB_CONFIG_TMP  := utils/grub.cfg.template
@@ -101,7 +102,7 @@ $(DIRS) :
 	mkdir -p $@
 
 qemu-run : image
-	$(QEMU_COMMAND) -cdrom $(IMG_TARGET)
+	$(QEMU_COMMAND) $(QEMU_OPTION)
 
 clean :
 	$(MAKE) -C kernel clean
