@@ -41,23 +41,25 @@ void init_mem(multiboot_info_t* mbi) {
 #endif
   // TODO: initialize memory related environments: paging, heap, etc.
   multiboot_memory_map_t* mmap;
+  const uint32_t paged_mmap_addr = (uint32_t) (mbi->mmap_addr + 0xC0000000);
+  const uint32_t mmap_length = (uint32_t) mbi->mmap_length;
+  mmap = (multiboot_memory_map_t*) paged_mmap_addr;
 #ifdef _KERNEL_DEBUG
   printf("mmap_addr = 0x%x, mmap_length = 0x%x\n",
-         (uint32_t) mbi->mmap_addr, (uint32_t) mbi->mmap_length);
+          paged_mmap_addr, mmap_length);
 #endif
-  for (
-    mmap = (multiboot_memory_map_t*) mbi->mmap_addr;
-    (uint64_t) mmap < mbi->mmap_addr + mbi->mmap_length;
-    mmap = (multiboot_memory_map_t*)
-      ((uint64_t) mmap + mmap->size + sizeof(mmap->size))
+  for ( ; (uint32_t) mmap < paged_mmap_addr + mmap_length;
+    mmap = (multiboot_memory_map_t*) (
+      (uint32_t) mmap + mmap->size + sizeof(mmap->size)
+    )
   ) {
     //TODO
 #ifdef _KERNEL_DEBUG
   printf(
     "    size = 0x%x, base_addr = 0x%x%08x, length = 0x%x%08x, type = 0x%x\n",
     (uint32_t) mmap->size,
-    (uint32_t) (mmap->addr >> 32),
-    (uint32_t) (mmap->addr & 0xFFFFFFFF),
+    (uint32_t) ((mmap->addr + 0xC0000000) >> 32),
+    (uint32_t) ((mmap->addr + 0xC0000000) & 0xFFFFFFFF),
     (uint32_t) (mmap->len >> 32),
     (uint32_t) (mmap->len & 0xFFFFFFFF),
     (uint32_t) mmap->type

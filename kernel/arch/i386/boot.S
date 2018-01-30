@@ -18,23 +18,22 @@ forced to be within the first 8 KiB of the kernel file.
 .long FLAGS
 .long CHECKSUM
 
-/*
-The multiboot standard does not define the value of the stack pointer register
-(esp) and it is up to the kernel to provide a stack. This allocates room for a
-small stack by creating a symbol at the bottom of it, then allocating 16384
-bytes for it, and finally creating a symbol at the top. The stack grows
-downwards on x86. The stack is in its own section so it can be marked nobits,
-which means the kernel file is smaller because it does not contain an
-uninitialized stack. The stack on x86 must be 16-byte aligned according to the
-System V ABI standard and de-facto extensions. The compiler will assume the
-stack is properly aligned and failure to align the stack will result in
-undefined behavior.
-*/
 .section .bss
 .align 16
 stack_bottom:
-.skip 16384 # 16 KiB
+  .skip 16384
 stack_top:
+
+.set KERNEL_VIRTUAL_BASE, 0xC0000000
+.set KERNEL_PAGE_NUMBER,  (KERNEL_VIRTUAL_BASE >> 22)
+
+.section .data
+.align 4096
+boot_page_dir:
+  .long 0x00000083
+  .fill (KERNEL_PAGE_NUMBER - 1), 4, 0x00000000
+  .long 0x00000083
+  .fill (1024 - KERNEL_PAGE_NUMBER - 1), 4, 0x00000000
 
 /*
 The linker script specifies _start as the entry point to the kernel and the
@@ -42,8 +41,10 @@ bootloader will jump to this position once the kernel has been loaded. It
 doesn't make sense to return from this function as the bootloader is gone.
 */
 .section .text
+.align 4
 .global _start
 .type _start, @function
+
 _start:
 	/*
 	The bootloader has loaded us into 32-bit protected mode on a x86
@@ -57,6 +58,28 @@ _start:
 	itself. It has absolute and complete power over the
 	machine.
 	*/
+
+  /*
+  Initialize paging
+  */
+  movl $(boot_page_dir - KERNEL_VIRTUAL_BASE), %ecx
+  movl %ecx, %cr3
+
+  movl %cr4, %ecx
+  orl  $0x00000010, %ecx
+  movl %ecx, %cr4
+
+  movl %cr0, %ecx
+  orl  $0x80000000, %ecx
+  movl %ecx, %cr0
+
+  leal _higher_half_mapped, %ecx
+  jmp  *%ecx
+
+_higher_half_mapped:
+  movl $0, (boot_page_dir)
+  movl %cr3, %ecx
+	movl %ecx, %cr3
 
 	/*
 	To set up a stack, we set the esp register to point to the top of our
@@ -75,6 +98,7 @@ _start:
 	C++ features such as global constructors and exceptions will require
 	runtime support to work as well.
 	*/
+  addl  $KERNEL_VIRTUAL_BASE, %ebx
   pushl %ebx
   cli
   call kernel_init
@@ -106,9 +130,3 @@ _start:
 	cli
 1:	hlt
 	jmp 1b
-
-/*
-Set the size of the _start symbol to the current location '.' minus its start.
-This is useful when debugging or when you implement call tracing.
-*/
-.size _start, . - _start
