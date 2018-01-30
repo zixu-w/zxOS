@@ -90,7 +90,7 @@ static void init_gdt(void) {
   terminal_setcolor(vga_entry_color(VGA_COLOR_LIGHT_GREEN, VGA_COLOR_BLACK));
   printf("[INFO] ");
   terminal_setcolor(vga_entry_color(VGA_COLOR_LIGHT_GREY, VGA_COLOR_BLACK));
-  printf("Flushing initialized GDT.\n");
+  printf("Flushing initialized GDT at 0x%x.\n", &gdt_ptr);
 #endif
   gdt_flush((uint32_t) &gdt_ptr);
 #ifdef _KERNEL_DEBUG
@@ -169,7 +169,7 @@ static void init_idt(void) {
   terminal_setcolor(vga_entry_color(VGA_COLOR_LIGHT_GREEN, VGA_COLOR_BLACK));
   printf("[INFO] ");
   terminal_setcolor(vga_entry_color(VGA_COLOR_LIGHT_GREY, VGA_COLOR_BLACK));
-  printf("Flushing initialized IDT.\n");
+  printf("Flushing initialized IDT at 0x%x.\n", &idt_ptr);
 #endif
   idt_flush((uint32_t) &idt_ptr);
 #ifdef _KERNEL_DEBUG
