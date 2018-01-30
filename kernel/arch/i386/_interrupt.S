@@ -4,7 +4,7 @@
   isr\n:
     cli
     push $0
-    push \n
+    push $\n
     jmp _isr_common_stub
 .endm
 
@@ -13,7 +13,7 @@
   .type isr\n, @function
   isr\n:
     cli
-    push \n
+    push $\n
     jmp _isr_common_stub
 .endm
 
@@ -23,7 +23,7 @@
   irq\irq_no:
     cli
     push $0
-    push \int_no
+    push $\int_no
     jmp _irq_common_stub
 .endm
 
