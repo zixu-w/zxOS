@@ -78,8 +78,7 @@ _start:
 
 _higher_half_mapped:
   movl $0, (boot_page_dir)
-  movl %cr3, %ecx
-	movl %ecx, %cr3
+  invlpg (0)
 
 	/*
 	To set up a stack, we set the esp register to point to the top of our
