@@ -1,4 +1,5 @@
 #include <kernel/init.h>
+#include <kernel/memory.h>
 #include <kernel/tty.h>
 
 #ifdef _KERNEL_DEBUG
