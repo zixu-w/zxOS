@@ -5,8 +5,13 @@
 #include <stddef.h>
 #include <kernel/multiboot.h>
 
+#define KERNEL_BASE 0xC0000000
+
+#define PAGE_DIR_ADDR 0xFFFFF000
+
 #define NUM_PDE 1024
 #define NUM_PTE 1024
+
 #define PDE_PRST 0x1
 #define PDE_RW   0x2
 #define PDE_US   0x4

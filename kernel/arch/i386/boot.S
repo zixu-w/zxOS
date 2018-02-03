@@ -33,7 +33,8 @@ boot_page_dir:
   .long 0x00000083
   .fill (KERNEL_PAGE_NUMBER - 1), 4, 0x00000000
   .long 0x00000083
-  .fill (1024 - KERNEL_PAGE_NUMBER - 1), 4, 0x00000000
+  .fill (1024 - KERNEL_PAGE_NUMBER - 2), 4, 0x00000000
+  .long (boot_page_dir - KERNEL_VIRTUAL_BASE + 0x00000003)
 
 /*
 The linker script specifies _start as the entry point to the kernel and the
