@@ -95,7 +95,7 @@ void map_page(mem_addr_t phys_addr, mem_addr_t virt_addr, uint16_t flags) {
     pde |= phys_addr & ~0x003FFFFF;
     pde |= flags & 0x1FFF;
     ((pde_t*) PAGE_DIR_ADDR)[page_dir_index] = pde | PDE_PRST;
-    flush_tlb(phys_addr);
+    flush_tlb(virt_addr);
   } else {  // Map 4K page.
     // TODO
   }
