@@ -15,14 +15,14 @@ SECTIONS
 	   early in the image or the bootloader won't recognize the file format.
 	   Next we'll put the .text section. */
   kernel_start = .;
-	.text : AT (ADDR (.text) - 0xC0000000)
+	.text ALIGN(0x1000) : AT (ADDR (.text) - 0xC0000000)
 	{
 		*(.multiboot)
 		*(.text)
 	}
 
 	/* Read-only data. */
-	.rodata : AT (ADDR (.rodata) - 0xC0000000)
+	.rodata ALIGN(0x1000) : AT (ADDR (.rodata) - 0xC0000000)
 	{
 		*(.rodata*)
 	}
@@ -34,7 +34,7 @@ SECTIONS
 	}
 
 	/* Read-write data (uninitialized) and stack */
-	.bss : AT (ADDR (.bss) - 0xC0000000)
+	.bss ALIGN(0x1000) : AT (ADDR (.bss) - 0xC0000000)
 	{
 		*(COMMON)
 		*(.bss)
