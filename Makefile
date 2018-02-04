@@ -11,7 +11,7 @@ export EXEC_PREFIX = $(PREFIX)
 export BOOTDIR     = /boot
 export LIBDIR      = $(EXEC_PREFIX)/lib
 export INCLUDEDIR  = $(PREFIX)/include
-export PROG_NAME   = zxos
+export PROG_NAME   = zxOS
 
 HOSTARCH    != utils/target-triplet-to-arch.sh $(HOST)
 KERNEL_NAME := $(PROG_NAME).$(HOSTARCH)
