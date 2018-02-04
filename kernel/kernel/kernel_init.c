@@ -24,7 +24,9 @@ void kernel_init(multiboot_info_t* mbi) {
   printf("[INFO] ");
   terminal_setcolor(vga_entry_color(VGA_COLOR_LIGHT_GREY, VGA_COLOR_BLACK));
   printf("Kernel initialized.\n");
-  printf("    kernel start: 0x%x\n", (uint32_t) &kernel_start);
-  printf("    kernel end:   0x%x\n", (uint32_t) &kernel_end);
+  printf("    kernel start: 0x%08x (PHYS), 0x%08x (VIRT)\n",
+    (mem_addr_t) &kernel_phys_start, (mem_addr_t) &kernel_virt_start);
+  printf("    kernel end:   0x%08x (PHYS), 0x%08x (VIRT)\n",
+    (mem_addr_t) &kernel_phys_end, (mem_addr_t) &kernel_virt_end);
 #endif
 }

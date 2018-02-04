@@ -14,7 +14,8 @@ SECTIONS
 	/* First put the multiboot header, as it is required to be put very early
 	   early in the image or the bootloader won't recognize the file format.
 	   Next we'll put the .text section. */
-  kernel_start = .;
+  kernel_virt_start = .;
+  kernel_phys_start = kernel_virt_start - 0xC0000000;
 	.text ALIGN(0x1000) : AT (ADDR (.text) - 0xC0000000)
 	{
 		*(.multiboot)
@@ -42,5 +43,6 @@ SECTIONS
 
 	/* The compiler may produce other sections, by default it will put them in
 	   a segment with the same name. Simply add stuff here as needed. */
-  kernel_end = ALIGN(4K);
+  kernel_virt_end = ALIGN(4K);
+  kernel_phys_end = kernel_virt_end - 0xC0000000;
 }

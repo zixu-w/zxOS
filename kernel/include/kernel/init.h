@@ -6,8 +6,10 @@ extern "C"
 #else
 extern
 #endif
-void *kernel_start,
-     *kernel_end;
+void *kernel_virt_start,
+     *kernel_phys_start,
+     *kernel_virt_end,
+     *kernel_phys_end;
 
 void init_cpu(void);
 
