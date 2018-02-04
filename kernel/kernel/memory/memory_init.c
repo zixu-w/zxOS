@@ -5,8 +5,6 @@
 #include <stdio.h>
 #endif
 
-static multiboot_memory_map_t* mmap;
-
 void init_mem(multiboot_info_t* mbi) {
 #ifdef _KERNEL_DEBUG
   terminal_setcolor(vga_entry_color(VGA_COLOR_LIGHT_GREEN, VGA_COLOR_BLACK));
@@ -22,7 +20,7 @@ void init_mem(multiboot_info_t* mbi) {
 #endif
   const mem_addr_t paged_mmap_addr = (mem_addr_t) (mbi->mmap_addr+KERNEL_BASE);
   const uint32_t mmap_length = (uint32_t) mbi->mmap_length;
-  mmap = (multiboot_memory_map_t*) paged_mmap_addr;
+  multiboot_memory_map_t* mmap = (multiboot_memory_map_t*) paged_mmap_addr;
 #ifdef _KERNEL_DEBUG
   printf("mmap_addr = 0x%x, mmap_length = 0x%x\n",
           paged_mmap_addr, mmap_length);

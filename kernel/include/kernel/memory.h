@@ -5,6 +5,10 @@
 #include <stddef.h>
 #include <kernel/multiboot.h>
 
+#define MEM_BLOCK_SIZE      4096            // 4K memory block
+#define MEM_BLOCK_ALIGN     MEM_BLOCK_SIZE  // align at block size
+#define MEM_BLOCKS_PER_BYTE 8               // 1 bit for 1 block
+
 #define KERNEL_BASE 0xC0000000
 
 #define PAGE_DIR_ADDR 0xFFFFF000
@@ -37,17 +41,23 @@ typedef uint32_t mem_addr_t;
 typedef uint32_t pde_t;
 typedef uint32_t pte_t;
 
-struct avail_phys_mem_node {
-  struct avail_phys_mem_node* prev;
-  struct avail_phys_mem_node* next;
-  size_t size;
-};
-
-typedef struct avail_phys_mem_node avail_phys_mem_node_t;
-
 static inline void flush_tlb(mem_addr_t addr) {
   __asm__ __volatile__ ("invlpg (%0)" :: "r" (addr) : "memory");
 }
+
+static inline mem_addr_t block_align(mem_addr_t addr) {
+  return (addr & -MEM_BLOCK_ALIGN) + MEM_BLOCK_ALIGN;
+}
+
+#if defined(__cplusplus)
+extern "C"
+#else
+extern
+#endif
+void *kernel_virt_start,
+     *kernel_phys_start,
+     *kernel_virt_end,
+     *kernel_phys_end;
 
 void init_mem(multiboot_info_t*);
 mem_addr_t get_phys_addr(mem_addr_t);
