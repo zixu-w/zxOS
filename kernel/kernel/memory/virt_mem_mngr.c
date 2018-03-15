@@ -1,4 +1,6 @@
-#include <kernel/memory.h>
+#include <kernel/virt_mem_mngr.h>
+
+#undef _KERNEL_DEBUG
 
 #ifdef _KERNEL_DEBUG
 #include <kernel/tty.h>
