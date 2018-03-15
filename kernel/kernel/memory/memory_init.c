@@ -32,7 +32,8 @@ void init_mem(multiboot_info_t* mbi) {
   const uint32_t mmap_length = (uint32_t) mbi->mmap_length;
   multiboot_memory_map_t* mmap = (multiboot_memory_map_t*) paged_mmap_addr;
 
-  for (multiboot_memory_map_t* mmap_entry = mmap;
+  for (
+    multiboot_memory_map_t* mmap_entry = mmap;
     (uint32_t) mmap_entry < paged_mmap_addr + mmap_length;
     mmap_entry = (multiboot_memory_map_t*) (
       (uint32_t) mmap_entry + mmap_entry->size + sizeof(mmap_entry->size)
