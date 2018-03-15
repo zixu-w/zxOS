@@ -33,8 +33,8 @@
 typedef uint32_t pde_t;
 typedef uint32_t pte_t;
 
-static inline void flush_tlb(mem_addr_t addr) {
-  __asm__ __volatile__ ("invlpg (%0)" :: "r" (addr) : "memory");
+static inline void flush_tlb(mem_addr_t virt_addr) {
+  __asm__ __volatile__ ("invlpg (%0)" :: "r" (virt_addr) : "memory");
 }
 
 mem_addr_t get_phys_addr(mem_addr_t);
