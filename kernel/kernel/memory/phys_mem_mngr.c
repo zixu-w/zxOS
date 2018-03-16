@@ -93,7 +93,7 @@ void init_phys_mem_mngr(size_t mem_size) {
   );
 }
 
-void phys_mem_init_region(mem_addr_t base, size_t size) {
+void phys_mem_init_region(phys_addr_t base, size_t size) {
   int    frame  = base / MEM_BLOCK_SIZE;
   size_t blocks = size / MEM_BLOCK_SIZE;
 
@@ -105,7 +105,7 @@ void phys_mem_init_region(mem_addr_t base, size_t size) {
   mmap_set(0);
 }
 
-void phys_mem_deinit_region(mem_addr_t base, size_t size) {
+void phys_mem_deinit_region(phys_addr_t base, size_t size) {
   int    frame  = base / MEM_BLOCK_SIZE;
   size_t blocks = size / MEM_BLOCK_SIZE;
 
@@ -126,14 +126,14 @@ void* phys_mem_alloc_block() {
 
   mmap_set(frame);
 
-  mem_addr_t addr = frame * MEM_BLOCK_SIZE;
+  phys_addr_t addr = frame * MEM_BLOCK_SIZE;
   phys_mem_mngr_used_blocks++;
 
   return (void*) addr;
 }
 
 void phys_mem_free_block(void* p) {
-  mem_addr_t addr = (mem_addr_t) p;
+  phys_addr_t addr = (phys_addr_t) p;
   int frame = addr / MEM_BLOCK_SIZE;
 
   mmap_unset(frame);
@@ -154,14 +154,14 @@ void* phys_mem_alloc_blocks(size_t size) {
   for (i = 0; i < size; i++)
     mmap_set(frame + i);
 
-  mem_addr_t addr = frame * MEM_BLOCK_SIZE;
+  phys_addr_t addr = frame * MEM_BLOCK_SIZE;
   phys_mem_mngr_used_blocks += size;
 
   return (void*) addr;
 }
 
 void phys_mem_free_blocks(void* p, size_t size) {
-  mem_addr_t addr = (mem_addr_t) p;
+  phys_addr_t addr = (phys_addr_t) p;
   int frame = addr / MEM_BLOCK_SIZE;
 
   size_t i;
