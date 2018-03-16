@@ -54,7 +54,10 @@ void init_mem(multiboot_info_t* mbi) {
     }
   }
 
-  phys_mem_deinit_region((mem_addr_t) 0x0, (size_t) (&kernel_phys_end));
+  phys_mem_deinit_region(
+    (phys_addr_t) 0x0,
+    (size_t)(&kernel_phys_end + phys_mem_get_max_blocks() / MEM_BLOCKS_PER_BYTE)
+  );
 
   init_virt_mem_mngr();
 
