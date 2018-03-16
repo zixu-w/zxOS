@@ -75,5 +75,14 @@ void init_mem(multiboot_info_t* mbi) {
   printf("[INFO] ");
   terminal_setcolor(vga_entry_color(VGA_COLOR_LIGHT_GREY, VGA_COLOR_BLACK));
   printf("Memory environments initialized.\n");
+  virt_mem_map_page(
+    (phys_addr_t) phys_mem_alloc_block(),
+    (virt_addr_t) 0x00001000,
+    PTE_RW
+  );
+  printf("page_dir[0]: 0x%08x\n", virt_mem_get_page_dir()->entries[0]);
+  int* test = (int*) 0x00001000;
+  *test = 12345;
+  printf("%d\n", *test);
 #endif
 }

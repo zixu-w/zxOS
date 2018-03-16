@@ -6,8 +6,6 @@
 
 #define MEM_BLOCKS_PER_BYTE 8               // 1 bit for 1 block
 
-typedef mem_addr_t phys_addr_t;
-
 size_t phys_mem_get_size();
 size_t phys_mem_get_max_blocks();
 size_t phys_mem_get_used_blocks();

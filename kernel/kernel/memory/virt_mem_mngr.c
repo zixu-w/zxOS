@@ -1,10 +1,8 @@
-#include <stdbool.h>
-
 #include <kernel/kernel.h>
 #include <kernel/virt_mem_mngr.h>
 #include <kernel/phys_mem_mngr.h>
 
-#undef _KERNEL_DEBUG
+// #undef _KERNEL_DEBUG
 
 #ifdef _KERNEL_DEBUG
 #include <kernel/tty.h>
@@ -115,22 +113,22 @@ page_dir_t* virt_mem_get_page_dir() {
 }
 
 bool virt_mem_alloc_page(pte_t* pte) {
-  void* p = phys_mem_alloc_block() + KERNEL_BASE;
+  void* phys_block = phys_mem_alloc_block();
 
-  if (!p)
+  if (!phys_block)
     return false;
 
-  pte_set_frame(pte, (phys_addr_t) (p - KERNEL_BASE));
+  pte_set_frame(pte, (phys_addr_t) phys_block);
   pte_add_flag(pte, PTE_PRST);
 
   return true;
 }
 
 void virt_mem_free_page(pte_t* pte) {
-  void* p = (void*) (pte_get_frame(*pte) + KERNEL_BASE);
+  phys_addr_t frame = pte_get_frame(*pte);
 
-  if (p)
-    phys_mem_free_block(p - KERNEL_BASE);
+  if (frame)
+    phys_mem_free_block((void*) frame);
 
   pte_del_flag(pte, PTE_PRST);
 }
@@ -141,39 +139,91 @@ bool virt_mem_map_page(
   page_dir_t* page_dir = virt_mem_get_page_dir();
   pde_t* pde = &(page_dir->entries[page_dir_index(virt_addr)]);
 
+#ifdef _KERNEL_DEBUG
+  terminal_setcolor(vga_entry_color(VGA_COLOR_LIGHT_GREEN, VGA_COLOR_BLACK));
+  printf("[virt_mem_map_page] ");
+  terminal_setcolor(vga_entry_color(VGA_COLOR_LIGHT_GREY, VGA_COLOR_BLACK));
+  printf("Mapping 0x%08x (PHYS) to 0x%08x (VIRT).\n", phys_addr, virt_addr);
+  terminal_setcolor(vga_entry_color(VGA_COLOR_LIGHT_GREEN, VGA_COLOR_BLACK));
+  printf("[virt_mem_map_page] ");
+  terminal_setcolor(vga_entry_color(VGA_COLOR_LIGHT_GREY, VGA_COLOR_BLACK));
+  printf("page_dir@ 0x%08x; pde@ 0x%08x.\n", page_dir, pde);
+#endif
+
   if (flags & MAP_PGSZ) {  // Map 4M page.
     *pde |= phys_addr & ~0x003FFFFF;
     *pde |= (flags | PDE_PRST) & 0x1FFF;
     flush_tlb(virt_addr);
   } else {  // Map 4K page.
+#ifdef _KERNEL_DEBUG
+  terminal_setcolor(vga_entry_color(VGA_COLOR_LIGHT_GREEN, VGA_COLOR_BLACK));
+  printf("[virt_mem_map_page] ");
+  terminal_setcolor(vga_entry_color(VGA_COLOR_LIGHT_GREY, VGA_COLOR_BLACK));
+  printf("Mapping 4K page.\n");
+#endif
     if (!pde_test_flag(*pde, PDE_PRST)) {  // page table not present
-      page_tab_t* page_tab =
-        (page_tab_t*) (phys_mem_alloc_block() + KERNEL_BASE);
+      void* phys_block = phys_mem_alloc_block();
 
-      if (!page_tab)
+      if (!phys_block)
         return false;
+
+      page_tab_t* page_tab =
+        (page_tab_t*) ((phys_addr_t) phys_block + KERNEL_BASE);
+
+#ifdef _KERNEL_DEBUG
+  terminal_setcolor(vga_entry_color(VGA_COLOR_LIGHT_GREEN, VGA_COLOR_BLACK));
+  printf("[virt_mem_map_page] ");
+  terminal_setcolor(vga_entry_color(VGA_COLOR_LIGHT_GREY, VGA_COLOR_BLACK));
+  printf(
+    "Page table not presented, allocating at 0x%08x (PHYS).\n",
+    (phys_addr_t) phys_block
+  );
+#endif
 
       memset(page_tab, 0, sizeof(page_tab_t));
 
-      pde_set_frame(pde, (phys_addr_t) (page_tab - KERNEL_BASE));
+      pde_set_frame(pde, (phys_addr_t) phys_block);
       pde_add_flag(pde, PDE_PRST | PDE_RW);
+
+#ifdef _KERNEL_DEBUG
+  terminal_setcolor(vga_entry_color(VGA_COLOR_LIGHT_GREEN, VGA_COLOR_BLACK));
+  printf("[virt_mem_map_page] ");
+  terminal_setcolor(vga_entry_color(VGA_COLOR_LIGHT_GREY, VGA_COLOR_BLACK));
+  printf("New page table initialized.\n");
+#endif
     }
 
     page_tab_t* page_tab = (page_tab_t*) (pde_get_frame(*pde) + KERNEL_BASE);
     pte_t* pte = &(page_tab->entries[page_tab_index(virt_addr)]);
 
+#ifdef _KERNEL_DEBUG
+  terminal_setcolor(vga_entry_color(VGA_COLOR_LIGHT_GREEN, VGA_COLOR_BLACK));
+  printf("[virt_mem_map_page] ");
+  terminal_setcolor(vga_entry_color(VGA_COLOR_LIGHT_GREY, VGA_COLOR_BLACK));
+  printf("page_tab@ 0x%08x; pte@ 0x%08x.\n", page_tab, pte);
+#endif
+
     pte_set_frame(pte, phys_addr);
     pte_add_flag(pte, flags | PTE_PRST);
   }
+
+#ifdef _KERNEL_DEBUG
+  terminal_setcolor(vga_entry_color(VGA_COLOR_LIGHT_GREEN, VGA_COLOR_BLACK));
+  printf("[virt_mem_map_page] ");
+  terminal_setcolor(vga_entry_color(VGA_COLOR_LIGHT_GREY, VGA_COLOR_BLACK));
+  printf("Page mapped.\n");
+#endif
 
   return true;
 }
 
 void init_virt_mem_mngr() {
-  page_dir_t* page_dir = (page_dir_t*) (phys_mem_alloc_block() + KERNEL_BASE);
+  void* phys_block = phys_mem_alloc_block();
 
-  if (!page_dir)
+  if (!phys_block)
     panic("Cannot allocate memory for page directory!\n");
+
+  page_dir_t* page_dir = (page_dir_t*) ((phys_addr_t) phys_block + KERNEL_BASE);
 
   memset(page_dir, 0, sizeof(page_dir_t));
 

@@ -2,6 +2,7 @@
 #define _KERNEL_VIRT_MEM_MNGR_H
 
 #include <stddef.h>
+#include <stdbool.h>
 #include <kernel/memory.h>
 
 #define NUM_PDE 1024
@@ -31,8 +32,6 @@
 typedef uint32_t pde_t;
 typedef uint32_t pte_t;
 
-typedef mem_addr_t virt_addr_t;
-
 struct page_table {
   pte_t entries[NUM_PTE];
 }__attribute__((aligned(4096)));
@@ -46,5 +45,6 @@ typedef struct page_directory page_dir_t;
 
 void init_virt_mem_mngr();
 page_dir_t* virt_mem_get_page_dir();
+bool virt_mem_map_page(phys_addr_t, virt_addr_t, uint32_t);
 
 #endif

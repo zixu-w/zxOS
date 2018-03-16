@@ -12,6 +12,8 @@
 #define KERNEL_BASE 0xC0000000
 
 typedef uint32_t mem_addr_t;
+typedef uint32_t phys_addr_t;
+typedef uint32_t virt_addr_t;
 
 static inline mem_addr_t block_align(mem_addr_t addr) {
   return (addr & -MEM_BLOCK_ALIGN) + MEM_BLOCK_ALIGN;
