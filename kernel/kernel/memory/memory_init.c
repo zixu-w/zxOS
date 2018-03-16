@@ -16,7 +16,7 @@ void init_mem(multiboot_info_t* mbi) {
   printf("[INFO] ");
   terminal_setcolor(vga_entry_color(VGA_COLOR_LIGHT_GREY, VGA_COLOR_BLACK));
   printf("Detecting memory.\n");
-  printf("mem_lower = %uKB, mem_upper = %uKB\n",
+  printf("    mem_lower = %uKB, mem_upper = %uKB\n",
          (uint32_t) mbi->mem_lower, (uint32_t) mbi->mem_upper);
 #endif
   uint32_t mem_size = (uint32_t) mbi->mem_lower + (uint32_t) mbi->mem_upper;
@@ -28,7 +28,7 @@ void init_mem(multiboot_info_t* mbi) {
          mem_size);
 #endif
   init_phys_mem_mngr(mem_size);
-  const mem_addr_t paged_mmap_addr = (mem_addr_t) (mbi->mmap_addr+KERNEL_BASE);
+  const virt_addr_t paged_mmap_addr = (virt_addr_t)(mbi->mmap_addr+KERNEL_BASE);
   const uint32_t mmap_length = (uint32_t) mbi->mmap_length;
   multiboot_memory_map_t* mmap = (multiboot_memory_map_t*) paged_mmap_addr;
 
@@ -44,11 +44,11 @@ void init_mem(multiboot_info_t* mbi) {
       printf(
         "    %uKB region starting at 0x%08x available.\n",
         (size_t) ((mmap_entry->len & 0xFFFFFFFF) / 1024),
-        (mem_addr_t) (mmap_entry->addr & 0xFFFFFFFF)
+        (phys_addr_t) (mmap_entry->addr & 0xFFFFFFFF)
       );
 #endif
       phys_mem_init_region(
-        (mem_addr_t) (mmap_entry->addr & 0xFFFFFFFF),
+        (phys_addr_t) (mmap_entry->addr & 0xFFFFFFFF),
         (size_t) (mmap_entry->len & 0xFFFFFFFF)
       );
     }
@@ -59,13 +59,21 @@ void init_mem(multiboot_info_t* mbi) {
     (size_t)(&kernel_phys_end + phys_mem_get_max_blocks() / MEM_BLOCKS_PER_BYTE)
   );
 
-  init_virt_mem_mngr();
-
 #ifdef _KERNEL_DEBUG
   terminal_setcolor(vga_entry_color(VGA_COLOR_LIGHT_GREEN, VGA_COLOR_BLACK));
   printf("[INFO] ");
   terminal_setcolor(vga_entry_color(VGA_COLOR_LIGHT_GREY, VGA_COLOR_BLACK));
+  printf("Initializing virtual memory manager.\n");
+#endif
+
+  init_virt_mem_mngr();
+
+#ifdef _KERNEL_DEBUG
+  printf("    Page directory reinitialized at 0x%08x (VIRT).\n",
+         virt_mem_get_page_dir());
+  terminal_setcolor(vga_entry_color(VGA_COLOR_LIGHT_GREEN, VGA_COLOR_BLACK));
+  printf("[INFO] ");
+  terminal_setcolor(vga_entry_color(VGA_COLOR_LIGHT_GREY, VGA_COLOR_BLACK));
   printf("Memory environments initialized.\n");
-  printf("Page directory at 0x%08x (VIRT).\n", virt_mem_get_page_dir());
 #endif
 }
