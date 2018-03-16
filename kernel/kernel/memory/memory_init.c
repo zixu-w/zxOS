@@ -56,20 +56,13 @@ void init_mem(multiboot_info_t* mbi) {
 
   phys_mem_deinit_region((mem_addr_t) 0x0, (size_t) (&kernel_phys_end));
 
+  init_virt_mem_mngr();
+
 #ifdef _KERNEL_DEBUG
   terminal_setcolor(vga_entry_color(VGA_COLOR_LIGHT_GREEN, VGA_COLOR_BLACK));
   printf("[INFO] ");
   terminal_setcolor(vga_entry_color(VGA_COLOR_LIGHT_GREY, VGA_COLOR_BLACK));
   printf("Memory environments initialized.\n");
-  // printf("Page directory at 0x%08x (PHY).\n", get_phys_addr(PAGE_DIR_ADDR));
-  // void* palloc_test = phys_mem_alloc_block();
-  // printf("palloc_test:  0x%08x\n", palloc_test);
-  // void* palloc_test2 = phys_mem_alloc_block();
-  // printf("palloc_test2: 0x%08x\n", palloc_test2);
-  // phys_mem_free_block(palloc_test2);
-  // void* palloc_test3 = phys_mem_alloc_blocks(2);
-  // printf("palloc_test3: 0x%08x\n", palloc_test3);
-  // void* palloc_test4 = phys_mem_alloc_block();
-  // printf("palloc_test4: 0x%08x\n", palloc_test4);
+  printf("Page directory at 0x%08x (VIRT).\n", virt_mem_get_page_dir());
 #endif
 }

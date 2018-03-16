@@ -4,8 +4,6 @@
 #include <stddef.h>
 #include <kernel/memory.h>
 
-#define PAGE_DIR_ADDR 0xFFFFF000
-
 #define NUM_PDE 1024
 #define NUM_PTE 1024
 
@@ -33,11 +31,20 @@
 typedef uint32_t pde_t;
 typedef uint32_t pte_t;
 
-static inline void flush_tlb(mem_addr_t virt_addr) {
-  __asm__ __volatile__ ("invlpg (%0)" :: "r" (virt_addr) : "memory");
-}
+typedef mem_addr_t virt_addr_t;
 
-mem_addr_t get_phys_addr(mem_addr_t);
-void map_page(mem_addr_t, mem_addr_t, uint16_t);
+struct page_table {
+  pte_t entries[NUM_PTE];
+}__attribute__((aligned(4096)));
+
+struct page_directory {
+  pde_t entries[NUM_PDE];
+}__attribute__((aligned(4096)));
+
+typedef struct page_table     page_tab_t;
+typedef struct page_directory page_dir_t;
+
+void init_virt_mem_mngr();
+page_dir_t* virt_mem_get_page_dir();
 
 #endif
