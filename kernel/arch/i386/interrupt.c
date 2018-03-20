@@ -11,8 +11,12 @@ void register_interrupt_handler(uint8_t n, isr_t handler) {
 }
 
 void isr_handler(registers_t regs) {
-  printf("isr %d; eip: 0x%08x\n", regs.int_no, regs.eip);
-  panic("Unhandled interrupt!");
+  if (interrupt_handlers[regs.int_no] != 0)
+    interrupt_handlers[regs.int_no](regs);
+  else {
+    printf("isr %d; eip: 0x%08x\n", regs.int_no, regs.eip);
+    panic("Unhandled interrupt!");
+  }
 }
 
 void irq_handler(registers_t regs) {

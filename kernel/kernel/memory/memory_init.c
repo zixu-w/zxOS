@@ -84,5 +84,7 @@ void init_mem(multiboot_info_t* mbi) {
   int* test = (int*) 0x00001000;
   *test = 12345;
   printf("%d\n", *test);
+  printf("Physical address for 0x00001000 is 0x%08x\n",
+         virt_to_phys(0x00001000));
 #endif
 }
