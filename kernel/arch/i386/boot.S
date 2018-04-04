@@ -19,7 +19,7 @@ forced to be within the first 8 KiB of the kernel file.
 .long CHECKSUM
 
 .section .bss
-.align 16
+.align 32
 stack_bottom:
   .skip 16384
 stack_top:
