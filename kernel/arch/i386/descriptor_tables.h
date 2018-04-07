@@ -26,12 +26,12 @@
 struct gdt_ptr_struct {
   uint16_t limit;
   uint32_t base;
-}__attribute__((packed));
+}__attribute__((packed, aligned(8)));
 
 struct idt_ptr_struct {
   uint16_t limit;
   uint32_t base;
-}__attribute__((packed));
+}__attribute__((packed, aligned(8)));
 
 struct gdt_entry_struct {
   uint16_t limit_low_16;
