@@ -56,3 +56,6 @@ dkms.conf
 sysroot
 dep
 image
+
+# IDE configurations
+.idea
