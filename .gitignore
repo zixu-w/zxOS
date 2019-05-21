@@ -43,6 +43,9 @@
 *.idb
 *.pdb
 
+# Symbol files
+*.sym
+
 # Kernel Module Compile Results
 *.mod*
 *.cmd

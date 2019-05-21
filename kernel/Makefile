@@ -5,7 +5,7 @@ HOST         ?= DEFAULT_HOST
 HOSTARCH     != ../utils/target-triplet-to-arch.sh $(HOST)
 HOSTPLAT     != ../utils/target-triplet-to-plat.sh $(HOST)
 
-CFLAGS   ?= -O2 -g
+CFLAGS   ?=
 CPPFLAGS ?=
 LDFLAGS  ?=
 LIBS     ?=
@@ -58,9 +58,11 @@ $(LIBS) \
 $(ARCHDIR)/crtend.o \
 $(ARCHDIR)/crtn.o \
 
-PROG_NAME    ?= zxos
-KERNEL_NAME  ?= $(PROG_NAME).$(HOSTARCH)
-BUILD_TARGET := $(KERNEL_DIR)/$(KERNEL_NAME)
+PROG_NAME     ?= zxos
+KERNEL_NAME   ?= $(PROG_NAME).$(HOSTARCH)
+BUILD_TARGET  := $(KERNEL_DIR)/$(KERNEL_NAME)
+KERNEL_SYM    := $(PROG_NAME).sym
+SYMBOL_TARGET := $(KERNEL_DIR)/$(KERNEL_SYM)
 
 CHECK := $(CROSS_GRUB)-file --is-$(HOSTPLAT)-$(BOOT_TYPE) $(BUILD_TARGET)
 
@@ -93,6 +95,7 @@ $(AUX_DIRS) :
 
 clean :
 	$(RM) $(BUILD_TARGET)
+	$(RM) $(SYMBOL_TARGET)
 	$(RM) $(OBJS) *.o */*.o */*/*.o
 	$(RM) $(OBJS:.o=.d) *.d */*.d */*/*.d
 
@@ -102,6 +105,8 @@ install-headers : | $(DESTDIR)$(INCLUDEDIR)
 	cp -R --preserve=timestamps include/. $(DESTDIR)$(INCLUDEDIR)/.
 
 install-kernel : $(BUILD_TARGET) | $(DESTDIR)$(BOOTDIR)
-	cp $(BUILD_TARGET) $(DESTDIR)$(BOOTDIR)
+	objcopy --only-keep-debug $(BUILD_TARGET) $(SYMBOL_TARGET)
+	objcopy --strip-debug $(BUILD_TARGET)
+	cp $(BUILD_TARGET) $(SYMBOL_TARGET) $(DESTDIR)$(BOOTDIR)
 
 -include $(OBJS:.o=.d)

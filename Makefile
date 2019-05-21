@@ -1,6 +1,6 @@
 include make.config
 
-.PHONY : all debug pre-install kernel libc install image qemu-run clean dependencies
+.PHONY : all debug pre-install kernel libc install image qemu-debug qemu-run clean dependencies
 
 PWD != pwd
 
@@ -70,6 +70,7 @@ $(SYSROOT) \
 all : libc kernel
 
 debug : export CPPFLAGS += -D_KERNEL_DEBUG
+debug : export CFLAGS += -O0 -g
 debug : all
 
 kernel : pre-install
@@ -100,6 +101,9 @@ $(GRUB_CONFIG) : | $(GRUB_CONFIG_TMP)
 
 $(DIRS) :
 	mkdir -p $@
+
+qemu-debug : export QEMU_COMMAND += -s -S
+qemu-debug : qemu-run
 
 qemu-run : image
 	$(QEMU_COMMAND) $(QEMU_OPTION)
